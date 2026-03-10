@@ -1,12 +1,14 @@
 from SPARQLWrapper import SPARQLWrapper, JSON
+from config import GRAPHDB_ENDPOINT
 
-sparql = SPARQLWrapper("http://localhost:7200/repositories/company_kg")
+sparql = SPARQLWrapper(GRAPHDB_ENDPOINT)
 
-def run_query(query):
 
+def run_query(query: str) -> dict:
+    """Execute a SPARQL SELECT query and return parsed JSON results."""
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-
-    results = sparql.query().convert()
-
-    return results
+    try:
+        return sparql.query().convert()
+    except Exception as exc:
+        return {"error": str(exc)}
