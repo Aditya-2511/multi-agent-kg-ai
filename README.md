@@ -21,7 +21,7 @@ A multi-agent AI system built with FastAPI, LangGraph-style state pipeline, Groq
 
 - **Natural language understanding** — Groq extracts cities, dates and intent from free-text questions
 - **Train agent** — fetches schedules, recommends best train, generates conversational answers
-- **Flight agent** — searches live flights between cities
+- **Flight agent** — searches flights between cities with AI-powered recommendations
 - **Follow-up handling** — session-based memory so users can ask follow-up questions without repeating context
 - **Knowledge graph** — SPARQL queries against GraphDB for company/entity data
 
@@ -111,11 +111,7 @@ GRAPHDB_UPDATE_ENDPOINT=http://localhost:7200/repositories/company_kg/statements
 ## Running the Server
 
 ```bash
-# Development (auto-reload on file changes)
 uvicorn api.main:app --reload
-
-# Production
-uvicorn api.main:app --workers 4
 ```
 
 Server runs at: `http://127.0.0.1:8000`
@@ -138,12 +134,6 @@ Ask a natural language question.
   "session_id": "my-session"
 }
 ```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `question` | string | ✅ | Natural language question |
-| `journey_date` | string | ❌ | Travel date in `yyyy-mm-dd` format |
-| `session_id` | string | ❌ | Session ID for follow-up questions |
 
 **Response:**
 ```json
@@ -178,10 +168,20 @@ Clear a session's conversation history.
 
 ## Example Questions
 
-```json
-{ "question": "trains from ajmer to jaipur", "journey_date": "2026-03-15", "session_id": "s1" }
-{ "question": "fastest train from ajmer to jaipur", "journey_date": "2026-03-15", "session_id": "s1" }
-{ "question": "which of these has AC coaches?", "session_id": "s1" }
-{ "question": "which trains run on Sunday?", "session_id": "s1" }
-{ "question": "flights from london to new york", "journey_date": "2026-03-13" }
-```
+### Train Queries
+{"question": "trains from ajmer to jaipur", "journey_date": "2026-03-15", "session_id": "s1"}
+{"question": "fastest train from ajmer to jaipur", "journey_date": "2026-03-15", "session_id": "s1"}
+
+### Train Follow-ups (same session_id)
+{"question": "which of these has AC coaches?", "session_id": "s1"}
+{"question": "which trains run on Sunday?", "session_id": "s1"}
+{"question": "which one is cheapest?", "session_id": "s1"}
+
+### Flight Queries
+{"question": "flights from london to new york", "journey_date": "2026-03-13", "session_id": "f1"}
+
+### Flight Follow-ups (same session_id)
+{"question": "which is the cheapest flight?", "session_id": "f1"}
+{"question": "any non-stop flights?", "session_id": "f1"}
+{"question": "what is the fastest option?", "session_id": "f1"}
+
