@@ -31,96 +31,78 @@ def get_trains(
     if not journey_date:
         journey_date = date.today().strftime("%Y-%m-%d")
 
-    # ── MOCK DATA (remove when quota resets or plan upgraded) ────────────────
-    # trains = [
-    #     {
-    #         "train_number":  "19707",
-    #         "train_name":    "ARAVALI EXPRESS",
-    #         "train_type":    "EXP",
-    #         "from_station":  "AJMER JN",
-    #         "to_station":    "JAIPUR JN",
-    #         "departure":     "06:10",
-    #         "arrival":       "09:45",
-    #         "duration":      "3:35",
-    #         "run_days":      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    #         "class_types":   ["SL", "3A", "2A", "1A"],
-    #         "special_train": False,
-    #         "train_date":    journey_date,
-    #     },
-    #     {
-    #         "train_number":  "12015",
-    #         "train_name":    "AJMER SHATABDI",
-    #         "train_type":    "SHATABDI",
-    #         "from_station":  "AJMER JN",
-    #         "to_station":    "JAIPUR JN",
-    #         "departure":     "14:25",
-    #         "arrival":       "17:10",
-    #         "duration":      "2:45",
-    #         "run_days":      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-    #         "class_types":   ["CC", "EC"],
-    #         "special_train": False,
-    #         "train_date":    journey_date,
-    #     },
-    # ]
-
-    # return {
-    #     "trains": trains,
-    #     "meta": {
-    #         "source_code":      source_code,
-    #         "destination_code": destination_code,
-    #         "journey_date":     journey_date,
-    #         "total_trains":     len(trains),
-    #     },
-    # }
-
-    # Implementation
-    headers = {
-        "X-RapidAPI-Key":  RAPIDAPI_KEY,
-        "X-RapidAPI-Host": TRAIN_RAPIDAPI_HOST,
-    }
-    params = {
-        "fromStationCode": source_code,
-        "toStationCode":   destination_code,
-        "dateOfJourney":   journey_date,
-    }
-
-    # ── HTTP call ────────────────────────────────────────────────────────────
-    try:
-        response = requests.get(
-            TRAIN_BASE_URL, headers=headers, params=params, timeout=30
-        )
-        response.raise_for_status()
-        data = response.json()
-    except requests.exceptions.Timeout:
-        return {"error": "Request timed out. Please try again."}
-    except requests.exceptions.HTTPError as exc:
-        return {"error": f"HTTP {exc.response.status_code}: {exc.response.text}"}
-    except requests.exceptions.RequestException as exc:
-        return {"error": f"Network error: {exc}"}
-    except ValueError:
-        return {"error": "Invalid JSON in API response."}
-
-    # ── API-level failure ────────────────────────────────────────────────────
-    if not data.get("status"):
-        return {"error": data.get("message", "API returned an error.")}
-
-    # ── Parse trains ─────────────────────────────────────────────────────────
+    # ── MOCK DATA ────────────────────────────────────────────────────────────
     trains = [
         {
-            "train_number": t.get("train_number", "N/A"),
-            "train_name":   t.get("train_name",   "N/A"),
-            "train_type":   t.get("train_type",   "N/A"),
-            "from_station": t.get("from_station_name") or t.get("from", "N/A"),
-            "to_station":   t.get("to_station_name")   or t.get("to",   "N/A"),
-            "departure":    t.get("from_std", "N/A"),
-            "arrival":      t.get("to_std",   "N/A"),
-            "duration":     t.get("duration", "N/A"),
-            "run_days":     t.get("run_days",    []),
-            "class_types":  t.get("class_type",  []),
-            "special_train":t.get("special_train", False),
-            "train_date":   t.get("train_date",  journey_date),
-        }
-        for t in data.get("data", [])
+            "train_number":  "19707",
+            "train_name":    "ARAVALI EXPRESS",
+            "train_type":    "EXP",
+            "from_station":  "AJMER JN",
+            "to_station":    "JAIPUR JN",
+            "departure":     "06:10",
+            "arrival":       "09:45",
+            "duration":      "3:35",
+            "run_days":      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "class_types":   ["SL", "3A", "2A", "1A"],
+            "special_train": False,
+            "train_date":    journey_date,
+        },
+        {
+            "train_number":  "12015",
+            "train_name":    "AJMER SHATABDI",
+            "train_type":    "SHATABDI",
+            "from_station":  "AJMER JN",
+            "to_station":    "JAIPUR JN",
+            "departure":     "14:25",
+            "arrival":       "17:10",
+            "duration":      "2:45",
+            "run_days":      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            "class_types":   ["CC", "EC"],
+            "special_train": False,
+            "train_date":    journey_date,
+        },
+        {
+            "train_number":  "22988",
+            "train_name":    "AJMER JAIPUR INTERCITY",
+            "train_type":    "INTERCITY",
+            "from_station":  "AJMER JN",
+            "to_station":    "JAIPUR JN",
+            "departure":     "05:30",
+            "arrival":       "08:00",
+            "duration":      "2:30",
+            "run_days":      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "class_types":   ["2S", "SL"],
+            "special_train": False,
+            "train_date":    journey_date,
+        },
+        {
+            "train_number":  "09733",
+            "train_name":    "AJMER JAIPUR SPECIAL",
+            "train_type":    "SPL",
+            "from_station":  "AJMER JN",
+            "to_station":    "JAIPUR JN",
+            "departure":     "11:00",
+            "arrival":       "14:10",
+            "duration":      "3:10",
+            "run_days":      ["Sat", "Sun"],
+            "class_types":   ["SL", "3A"],
+            "special_train": True,
+            "train_date":    journey_date,
+        },
+        {
+            "train_number":  "20473",
+            "train_name":    "AJMER VANDE BHARAT",
+            "train_type":    "VANDE BHARAT",
+            "from_station":  "AJMER JN",
+            "to_station":    "JAIPUR JN",
+            "departure":     "08:15",
+            "arrival":       "10:00",
+            "duration":      "1:45",
+            "run_days":      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "class_types":   ["CC", "EC"],
+            "special_train": False,
+            "train_date":    journey_date,
+        },
     ]
 
     return {
@@ -132,3 +114,63 @@ def get_trains(
             "total_trains":     len(trains),
         },
     }
+
+    # Implementation
+    # headers = {
+    #     "X-RapidAPI-Key":  RAPIDAPI_KEY,
+    #     "X-RapidAPI-Host": TRAIN_RAPIDAPI_HOST,
+    # }
+    # params = {
+    #     "fromStationCode": source_code,
+    #     "toStationCode":   destination_code,
+    #     "dateOfJourney":   journey_date,
+    # }
+
+    # # ── HTTP call ────────────────────────────────────────────────────────────
+    # try:
+    #     response = requests.get(
+    #         TRAIN_BASE_URL, headers=headers, params=params, timeout=30
+    #     )
+    #     response.raise_for_status()
+    #     data = response.json()
+    # except requests.exceptions.Timeout:
+    #     return {"error": "Request timed out. Please try again."}
+    # except requests.exceptions.HTTPError as exc:
+    #     return {"error": f"HTTP {exc.response.status_code}: {exc.response.text}"}
+    # except requests.exceptions.RequestException as exc:
+    #     return {"error": f"Network error: {exc}"}
+    # except ValueError:
+    #     return {"error": "Invalid JSON in API response."}
+
+    # # ── API-level failure ────────────────────────────────────────────────────
+    # if not data.get("status"):
+    #     return {"error": data.get("message", "API returned an error.")}
+
+    # # ── Parse trains ─────────────────────────────────────────────────────────
+    # trains = [
+    #     {
+    #         "train_number": t.get("train_number", "N/A"),
+    #         "train_name":   t.get("train_name",   "N/A"),
+    #         "train_type":   t.get("train_type",   "N/A"),
+    #         "from_station": t.get("from_station_name") or t.get("from", "N/A"),
+    #         "to_station":   t.get("to_station_name")   or t.get("to",   "N/A"),
+    #         "departure":    t.get("from_std", "N/A"),
+    #         "arrival":      t.get("to_std",   "N/A"),
+    #         "duration":     t.get("duration", "N/A"),
+    #         "run_days":     t.get("run_days",    []),
+    #         "class_types":  t.get("class_type",  []),
+    #         "special_train":t.get("special_train", False),
+    #         "train_date":   t.get("train_date",  journey_date),
+    #     }
+    #     for t in data.get("data", [])
+    # ]
+
+    # return {
+    #     "trains": trains,
+    #     "meta": {
+    #         "source_code":      source_code,
+    #         "destination_code": destination_code,
+    #         "journey_date":     journey_date,
+    #         "total_trains":     len(trains),
+    #     },
+    # }
