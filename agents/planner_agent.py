@@ -33,6 +33,20 @@ Question: {question}
 Answer:
 """.strip()
 
+def _is_ambiguous(question: str) -> bool:
+    """
+    Detect vague questions with no domain or city context.
+    """
+    q = question.lower()
+    # Only REAL domain keywords — not generic question words
+    domain_keywords = (
+        "train", "rail", "railway", "irctc",
+        "flight", "airline", "fly", "airport",
+        "weather", "stock", "price", "share",
+        "company", "founder", "employee",
+        "from", "to",   # ← city route indicator
+    )
+    return not any(w in q for w in domain_keywords)
 
 def plan_agents(state: dict) -> dict:
     """
@@ -49,6 +63,17 @@ def plan_agents(state: dict) -> dict:
             "followup_agent",
             "response_agent",   # skip reasoning_agent — answer already in final_answer
         ]
+        return state
+    
+    # ── Check for ambiguous question with no context ──────────────────────
+    if _is_ambiguous(question) and not conversation_history:
+        print(f"[planner] Ambiguous question with no context")
+        state["planned_agents"] = ["response_agent"]
+        state["final_answer"]   = (
+            "I'm not sure what you're looking for. Could you please provide "
+            "more details? For example: 'trains from Ajmer to Jaipur' or "
+            "'flights from London to New York'."
+        )
         return state
 
     # ── 1. Ask the LLM ───────────────────────────────────────────────────────

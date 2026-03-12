@@ -33,10 +33,6 @@ from utils.station_utils import (
 )
 from llm.groq_client import chat
 
-# ── Fallback route when nothing can be parsed ─────────────────────────────────
-_DEFAULT_SOURCE = "AII"   # Ajmer
-_DEFAULT_DEST   = "JP"    # Jaipur
-
 def recommend_train(question: str, trains: list[dict]) -> str:
     """
     Uses Groq to analyze train options and recommend the best one
@@ -151,8 +147,8 @@ def train_agent(state: dict) -> dict:
     
     if not source_code or not dest_code:
         parsed_src, parsed_dst = extract_stations_from_question(question)
-        source_code = source_code or parsed_src or _DEFAULT_SOURCE
-        dest_code   = dest_code   or parsed_dst or _DEFAULT_DEST
+        source_code = source_code or parsed_src
+        dest_code   = dest_code   or parsed_dst 
 
     # ── Fail early if cities not recognised ──────────────────────────────────
     if not source_code or not dest_code:
