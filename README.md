@@ -6,14 +6,12 @@ A multi-agent AI system built with FastAPI, LangGraph-style state pipeline, Groq
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| API | FastAPI |
-| LLM | Groq (`llama-3.3-70b-versatile`) |
-| Train Data | IRCTC RapidAPI |
-| Flight Data | Sky Scrapper RapidAPI |
-| Knowledge Graph | GraphDB (SPARQL) |
-| Runtime | Python 3.11+ |
+- **API** — FastAPI
+- **LLM** — Groq (`llama-3.3-70b-versatile`)
+- **Train Data** — IRCTC RapidAPI
+- **Flight Data** — Sky Scrapper RapidAPI
+- **Knowledge Graph** — GraphDB (SPARQL)
+- **Runtime** — Python 3.11+
 
 ---
 
@@ -57,7 +55,6 @@ multi-agent-kg-ai/
 │   └── flight_utils.py          # Airport code resolver
 ├── config.py                    # Constants, station codes, airport codes
 ├── .env                         # API keys (not committed)
-├── .env.example                 # Environment variable template
 └── requirements.txt
 ```
 
@@ -91,10 +88,6 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configure environment variables
-
-```bash
-cp .env.example .env
-```
 
 Edit `.env` and fill in your API keys:
 
