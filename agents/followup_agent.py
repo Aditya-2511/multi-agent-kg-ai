@@ -29,27 +29,27 @@ def is_followup_question(question: str, conversation_history: list[dict]) -> boo
 
     prompt = f"""You are a conversation analyzer.
 
-Previous conversation:
-{history_text}
+            Previous conversation:
+            {history_text}
 
-New question: "{question}"
+            New question: "{question}"
 
-Does the new question reference or ask about the previous results without mentioning a new city or route?
+            Does the new question reference or ask about the previous results without mentioning a new city or route?
 
-Examples that ARE follow-ups:
-- "which one is cheapest?"
-- "which of these has AC coaches?"
-- "which runs on Sunday?"
-- "does any have sleeper class?"
-- "what about the fastest one?"
+            Examples that ARE follow-ups:
+            - "which one is cheapest?"
+            - "which of these has AC coaches?"
+            - "which runs on Sunday?"
+            - "does any have sleeper class?"
+            - "what about the fastest one?"
 
-Examples that are NOT follow-ups:
-- "flights from delhi to mumbai"
-- "trains from mumbai to pune"
-- "what is the weather today"
+            Examples that are NOT follow-ups:
+            - "flights from delhi to mumbai"
+            - "trains from mumbai to pune"
+            - "what is the weather today"
 
-Reply with only: YES or NO
-"""
+            Reply with only: YES or NO
+            """
     try:
         response = chat(prompt, max_tokens=5).strip().upper()
         # extract YES or NO cleanly in case Groq adds extra text
@@ -66,48 +66,53 @@ def answer_followup(
     train_result: list[dict],
     conversation_history: list[dict],
 ) -> str:
-    """
-    Uses Groq to answer a follow-up question using previously
-    fetched train data and conversation history.
-    """
-    if not train_result:
-        return "I don't have any previous train results to answer that. Please ask a new train search question first."
+    # ── Try flight result if no train result ──────────────────────────────
+    flight_result = _extract_flights_from_history(conversation_history)
+    result_data   = train_result or flight_result
 
-    # Build train summary
-    train_summary = ""
-    for i, t in enumerate(train_result, 1):
-        classes  = ", ".join(t.get("class_types", []))
-        run_days = ", ".join(t.get("run_days", []))
-        train_summary += (
-            f"{i}. [{t['train_number']}] {t['train_name']} ({t['train_type']})\n"
-            f"   Departure: {t['departure']} → Arrival: {t['arrival']} "
-            f"| Duration: {t['duration']}\n"
-            f"   Classes: {classes} | Runs on: {run_days}\n"
-            f"   Special Train: {t['special_train']}\n\n"
-        )
+    if not result_data:
+        return "I don't have any previous results to answer that. Please ask a new search question first."
 
-    # Build conversation history text
+    data_summary = ""
+    for i, item in enumerate(result_data[:10], 1):
+        # train fields
+        if "train_number" in item:
+            classes  = ", ".join(item.get("class_types", []))
+            run_days = ", ".join(item.get("run_days", []))
+            data_summary += (
+                f"{i}. [{item['train_number']}] {item['train_name']} ({item['train_type']})\n"
+                f"   Departure: {item['departure']} → Arrival: {item['arrival']} | Duration: {item['duration']}\n"
+                f"   Classes: {classes} | Runs on: {run_days}\n\n"
+            )
+        # flight fields
+        elif "flight_number" in item:
+            data_summary += (
+                f"{i}. [{item['flight_number']}] {item['airline']}\n"
+                f"   {item['from_airport']} → {item['to_airport']}\n"
+                f"   Departure: {item['departure']} | Duration: {item['duration']} | {item['stops']} | Price: {item['price']}\n\n"
+            )
+
     history_text = "\n".join([
         f"User: {turn['question']}\nAssistant: {turn['answer']}"
         for turn in conversation_history[-3:]
     ])
 
-    prompt = f"""You are a helpful Indian railway assistant.
+    prompt = f"""You are a helpful travel assistant.
 
-Previous conversation:
-{history_text}
+            Previous conversation:
+            {history_text}
 
-Train data already fetched:
-{train_summary}
+            Data already fetched:
+            {data_summary}
 
-User follow-up question: "{question}"
+            User follow-up question: "{question}"
 
-Instructions:
-- Answer ONLY using the train data provided above
-- Be conversational and concise (2-3 sentences max)
-- Mention train name and number when referring to specific trains
-- If the question cannot be answered from the data, say so politely
-"""
+            Instructions:
+            - Answer ONLY using the data provided above
+            - Be conversational and concise (2-3 sentences max)
+            - Mention flight/train name and number when referring to specific options
+            - If the question cannot be answered from the data, say so politely
+            """
 
     try:
         answer = chat(prompt, max_tokens=250)
@@ -136,4 +141,11 @@ def _extract_trains_from_history(conversation_history: list[dict]) -> list[dict]
     for turn in reversed(conversation_history):
         if turn.get("train_result"):
             return turn["train_result"]
+    return []
+
+def _extract_flights_from_history(conversation_history: list[dict]) -> list[dict]:
+    """Extract flight_result stored from a previous turn if available."""
+    for turn in reversed(conversation_history):
+        if turn.get("flight_result"):
+            return turn["flight_result"]
     return []

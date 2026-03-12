@@ -78,15 +78,22 @@ def generate_explanation(state: dict) -> dict:
                 "the available booking window. Try a date within the next 2–3 days."
             )
         else:
-            lines = [
-                f"  • {f.get('airline', 'N/A')} {f.get('flight_number', '')} — "
-                f"Departs {f.get('departure', 'N/A')}, Arrives {f.get('arrival', 'N/A')}"
-                for f in flights[:10]
-            ]
-            state["final_answer"] = "Available flights:\n" + "\n".join(lines)
+            # ── Try Groq NL answer first ──────────────────────────────────────
+            nl_answer = state.get("flight_nl_answer")
+            if nl_answer:
+                state["final_answer"] = nl_answer
 
-    else:
-        state["final_answer"] = "No data was available to generate an answer."
+            # ── Fallback to raw list ──────────────────────────────────────────
+            else:
+                lines = [
+                    f"  • {f.get('airline', 'N/A')} {f.get('flight_number', '')} — "
+                    f"Departs {f.get('departure', 'N/A')}, Arrives {f.get('arrival', 'N/A')} "
+                    f"| {f.get('duration')} | {f.get('stops')} | {f.get('price')}"
+                    for f in flights[:10]
+                ]
+                state["final_answer"] = (
+                    f"Found {len(flights)} flight(s):\n" + "\n".join(lines)
+                )
 
     print(f"[reasoning_agent] final_answer set.")
     return state

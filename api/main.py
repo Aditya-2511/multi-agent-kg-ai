@@ -44,9 +44,10 @@ def ask_agent(request: QueryRequest):
     # ── Save this turn into session store ────────────────────────────────────
     if session_id:
         turn = {
-            "question":    request.question,
-            "answer":      state.get("formatted_response", {}).get("final_answer", ""),
+            "question":     request.question,
+            "answer":       state.get("formatted_response", {}).get("final_answer", ""),
             "train_result": state.get("train_result", []),
+            "flight_result": state.get("flight_result", []),   # ← add this
         }
         if session_id not in session_store:
             session_store[session_id] = []
